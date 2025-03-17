@@ -1,0 +1,263 @@
+/* Animations et effets visuels */
+
+/* Transitions de base */
+.transition-all {
+    transition: all 0.3s ease;
+  }
+  
+  /* Animation d'entrée des éléments */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .fade-in-up {
+    animation: fadeInUp 0.5s ease forwards;
+  }
+  
+  /* Animation pour les éléments au scroll */
+  .scroll-animate {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  
+  .scroll-animate.scrolled {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  /* Animations décalées pour les listes d'éléments */
+  .stagger-item {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  
+  .stagger-item.animated {
+    animation: fadeInUp 0.5s ease forwards;
+  }
+  
+  .stagger-delay-1 { animation-delay: 0.1s; }
+  .stagger-delay-2 { animation-delay: 0.2s; }
+  .stagger-delay-3 { animation-delay: 0.3s; }
+  .stagger-delay-4 { animation-delay: 0.4s; }
+  .stagger-delay-5 { animation-delay: 0.5s; }
+  .stagger-delay-6 { animation-delay: 0.6s; }
+  
+  /* Effet de surlignage au survol */
+  .hover-underline {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .hover-underline::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -2px;
+    left: 0;
+    background-color: var(--primary-color);
+    transition: width 0.3s ease;
+  }
+  
+  .hover-underline:hover::after {
+    width: 100%;
+  }
+  
+  /* Animation du header */
+  .header-loaded {
+    animation: headerSlideDown 0.5s ease forwards;
+  }
+  
+  @keyframes headerSlideDown {
+    from {
+      transform: translateY(-100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+  
+  .header-scrolled {
+    padding: 10px 0;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .header-hidden {
+    transform: translateY(-100%);
+  }
+  
+  /* Animation pour le formulaire de réservation */
+  .highlight-animation {
+    animation: highlight 1.5s ease;
+  }
+  
+  @keyframes highlight {
+    0% {
+      box-shadow: 0 0 0 rgba(255, 202, 40, 0);
+    }
+    50% {
+      box-shadow: 0 0 20px rgba(255, 202, 40, 0.8);
+    }
+    100% {
+      box-shadow: 0 0 0 rgba(255, 202, 40, 0);
+    }
+  }
+  
+  /* Animation de pulsation */
+  .pulse {
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  
+  /* Animation au survol des cartes */
+  .hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Animation de chargement */
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 202, 40, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--primary-color);
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+  
+  /* Animation pour les boutons */
+  .btn-animation {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .btn-animation::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s ease, height 0.6s ease;
+  }
+  
+  .btn-animation:hover::after {
+    width: 300%;
+    height: 300%;
+  }
+  
+  /* Animations pour les transitions de page */
+  .page-transition-enter {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  
+  .page-transition-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 300ms, transform 300ms;
+  }
+  
+  .page-transition-exit {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .page-transition-exit-active {
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: opacity 300ms, transform 300ms;
+  }
+  
+  /* Animation pour les notifications */
+  @keyframes slideInRight {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+  
+  .notification-enter {
+    animation: slideInRight 0.3s forwards;
+  }
+  
+  @keyframes slideOutRight {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
+  
+  .notification-exit {
+    animation: slideOutRight 0.3s forwards;
+  }
+  
+  /* Animation pour les éléments qui apparaissent */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  .fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  
+  /* Animation pour la validation des champs */
+  @keyframes validShake {
+    0%, 100% {
+      transform: translateX(0);
+    }
+    25% {
+      transform: translateX(-5px);
+    }
+    75% {
+      transform: translateX(5px);
+    }
+  }
+  
+  .valid-shake {
+    animation: validShake 0.4s ease-in-out;
+  }
