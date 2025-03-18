@@ -23,7 +23,7 @@ const Hero = () => {
               <button onClick={() => navigate('/booking')} className="btn btn-primary">
                 Réserver un taxi
               </button>
-              <a href={`tel:${config.company.phone.replace(/\s/g, '')}`} className="btn btn-outline">
+              <a href={`tel:${config.company.phone.replace(/\s/g, '')}`} className="btn btn-outline-primary">
                 <Phone size={18} />
                 {config.company.phone}
               </a>

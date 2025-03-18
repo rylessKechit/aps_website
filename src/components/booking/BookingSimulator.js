@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Car, ArrowRight, ArrowLeft, Clock, MapPin, Calendar, Users, CreditCard } from 'lucide-react';
+import { ArrowRight, MapPin, Calendar, Clock } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import GooglePlacesAutocomplete from './GooglePlacesAutocomplete';
-import { calculatePrice, formatPrice, isAirportTransfer, isNightFare } from '../../utils/pricing';
-import VehicleSelector from './VehicleSelector';
+import { isAirportTransfer, isNightFare, calculatePrice, formatPrice } from '../../utils/pricing';
 import config from '../../config';
 
 const BookingSimulator = () => {
@@ -69,6 +67,27 @@ const BookingSimulator = () => {
       vehicleType
     }));
   };
+
+  // Gérer l'incrémentation/décrémentation des passagers et bagages
+  const handleNumberChange = (field, increment) => {
+    setFormData(prev => {
+      let newValue;
+      if (field === 'passengers') {
+        newValue = increment 
+          ? Math.min(prev.passengers + 1, config.booking.maxPassengers) 
+          : Math.max(prev.passengers - 1, 1);
+      } else if (field === 'luggage') {
+        newValue = increment 
+          ? Math.min(prev.luggage + 1, config.booking.maxLuggage) 
+          : Math.max(prev.luggage - 1, 0);
+      }
+      
+      return {
+        ...prev,
+        [field]: newValue
+      };
+    });
+  };
   
   // Simuler la distance entre deux points (en production, utilisez Google Distance Matrix API)
   const simulateDistance = (origin, destination) => {
@@ -90,7 +109,9 @@ const BookingSimulator = () => {
   };
   
   // Simuler la réservation
-  const simulateBooking = async () => {
+  const simulateBooking = async (e) => {
+    e.preventDefault();
+    
     // Vérifier que les champs sont remplis
     if (!formData.pickupAddress || !formData.destinationAddress) {
       alert('Veuillez renseigner les adresses de départ et de destination.');
@@ -150,8 +171,6 @@ const BookingSimulator = () => {
   
   // Rediriger vers la page de réservation complète
   const handleProceedToBooking = () => {
-    // En production, vous voudriez stocker ces données dans un contexte ou localStorage
-    // pour les récupérer sur la page de réservation
     navigate('/booking', { 
       state: { 
         formData,
@@ -161,16 +180,15 @@ const BookingSimulator = () => {
   };
   
   return (
-    <div className="booking-simulator">
+    <div className="simulator-container">
       <h2 className="simulator-title">Simulez votre course</h2>
       
       {!showResult ? (
-        <div className="simulator-form">
+        <form className="simulator-form" onSubmit={simulateBooking}>
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="pickupDate">Date</label>
-              <div className="input-icon-wrapper">
-                <Calendar size={18} className="input-icon" />
+              <div className="address-input-wrapper">
                 <DatePicker
                   id="pickupDate"
                   selected={formData.pickupDate}
@@ -179,13 +197,13 @@ const BookingSimulator = () => {
                   dateFormat="dd/MM/yyyy"
                   className="form-control"
                 />
+                <Calendar className="address-input-icon" size={18} />
               </div>
             </div>
             
             <div className="form-group">
               <label htmlFor="pickupTime">Heure</label>
-              <div className="input-icon-wrapper">
-                <Clock size={18} className="input-icon" />
+              <div className="address-input-wrapper">
                 <DatePicker
                   id="pickupTime"
                   selected={formData.pickupTime}
@@ -197,185 +215,175 @@ const BookingSimulator = () => {
                   dateFormat="HH:mm"
                   className="form-control"
                 />
+                <Clock className="address-input-icon" size={18} />
               </div>
             </div>
           </div>
           
           <div className="form-group">
-            <GooglePlacesAutocomplete
-              id="pickupAddress"
-              name="pickupAddress"
-              value={formData.pickupAddress}
-              onChange={handleChange}
-              placeholder="Adresse de départ"
-              label="Départ"
-              required
-            />
+            <div className="address-input-wrapper">
+              <input
+                type="text"
+                id="pickupAddress"
+                name="pickupAddress"
+                value={formData.pickupAddress}
+                onChange={handleChange}
+                className="form-control"
+                placeholder="Adresse de départ"
+                required
+              />
+              <MapPin className="address-input-icon" size={18} />
+            </div>
+            <label htmlFor="pickupAddress" className="sr-only">Départ*</label>
           </div>
           
           <div className="form-group">
-            <GooglePlacesAutocomplete
-              id="destinationAddress"
-              name="destinationAddress"
-              value={formData.destinationAddress}
-              onChange={handleChange}
-              placeholder="Adresse de destination"
-              label="Destination"
-              required
-            />
+            <div className="address-input-wrapper">
+              <input
+                type="text"
+                id="destinationAddress"
+                name="destinationAddress"
+                value={formData.destinationAddress}
+                onChange={handleChange}
+                className="form-control"
+                placeholder="Adresse de destination"
+                required
+              />
+              <MapPin className="address-input-icon" size={18} />
+            </div>
+            <label htmlFor="destinationAddress" className="sr-only">Destination*</label>
           </div>
           
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="passengers">Passagers</label>
-              <div className="input-icon-wrapper">
-                <Users size={18} className="input-icon" />
-                <select
+              <div className="number-input-container">
+                <input
+                  type="number"
                   id="passengers"
                   name="passengers"
                   value={formData.passengers}
                   onChange={handleChange}
-                  className="form-control"
+                  className="form-control number-input"
+                  min="1"
+                  max={config.booking.maxPassengers}
+                  readOnly
+                />
+                <button 
+                  type="button" 
+                  className="number-control decrement"
+                  onClick={() => handleNumberChange('passengers', false)}
+                  disabled={formData.passengers <= 1}
                 >
-                  {Array.from({ length: config.booking.maxPassengers }, (_, i) => i + 1).map(num => (
-                    <option key={num} value={num}>{num}</option>
-                  ))}
-                </select>
+                  -
+                </button>
+                <button 
+                  type="button" 
+                  className="number-control increment"
+                  onClick={() => handleNumberChange('passengers', true)}
+                  disabled={formData.passengers >= config.booking.maxPassengers}
+                >
+                  +
+                </button>
               </div>
             </div>
             
             <div className="form-group">
               <label htmlFor="luggage">Bagages</label>
-              <div className="input-icon-wrapper">
-                <CreditCard size={18} className="input-icon" />
-                <select
+              <div className="number-input-container">
+                <input
+                  type="number"
                   id="luggage"
                   name="luggage"
                   value={formData.luggage}
                   onChange={handleChange}
-                  className="form-control"
+                  className="form-control number-input"
+                  min="0"
+                  max={config.booking.maxLuggage}
+                  readOnly
+                />
+                <button 
+                  type="button" 
+                  className="number-control decrement"
+                  onClick={() => handleNumberChange('luggage', false)}
+                  disabled={formData.luggage <= 0}
                 >
-                  {Array.from({ length: config.booking.maxLuggage + 1 }, (_, i) => i).map(num => (
-                    <option key={num} value={num}>{num}</option>
-                  ))}
-                </select>
+                  -
+                </button>
+                <button 
+                  type="button" 
+                  className="number-control increment"
+                  onClick={() => handleNumberChange('luggage', true)}
+                  disabled={formData.luggage >= config.booking.maxLuggage}
+                >
+                  +
+                </button>
               </div>
             </div>
           </div>
           
           <div className="form-group vehicle-selection">
             <label>Type de véhicule</label>
-            <VehicleSelector 
-              selected={formData.vehicleType} 
-              onChange={handleVehicleSelect} 
-            />
+            <div className="vehicle-options">
+              {config.vehicles.types.map(vehicle => (
+                <div 
+                  key={vehicle.id}
+                  className={`vehicle-option ${formData.vehicleType === vehicle.id ? 'active' : ''}`}
+                  onClick={() => handleVehicleSelect(vehicle.id)}
+                >
+                  <div className="vehicle-icon">
+                    {vehicle.id === 'berline' && (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path>
+                        <path d="M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path>
+                        <path d="M5 17h-2v-6l2 -5h9l4 5h1a2 2 0 0 1 2 2v4h-2m-4 0h-6"></path>
+                        <path d="M5 11l12 0"></path>
+                      </svg>
+                    )}
+                    {vehicle.id === 'electrique' && (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11.5 20h-6.5v-6a2 2 0 0 1 2 -2h8"></path>
+                        <path d="M16 14a2 2 0 1 1 4 0v6h-4v-6z"></path>
+                        <path d="M9 4l1 2h6l1 -2"></path>
+                        <path d="M12 14h-6v-4"></path>
+                        <path d="M15 4m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
+                        <path d="M19 4m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
+                      </svg>
+                    )}
+                    {vehicle.id === 'van' && (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path>
+                        <path d="M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path>
+                        <path d="M3 17h1v-6h13v6h1"></path>
+                        <path d="M3 9l0 -4l8 0l9 4l0 8"></path>
+                      </svg>
+                    )}
+                  </div>
+                  <span className="vehicle-name">{vehicle.name}</span>
+                  <span className="vehicle-capacity">{vehicle.capacity.passengers} passagers max</span>
+                </div>
+              ))}
+            </div>
           </div>
           
           <button 
-            type="button" 
-            className="btn btn-primary btn-block simulator-button"
-            onClick={simulateBooking}
+            type="submit" 
+            className="simulator-button"
             disabled={isLoading}
           >
             {isLoading ? 'Calcul en cours...' : 'Simuler ma course'}
-            {!isLoading && <ArrowRight size={18} className="btn-icon" />}
+            <ArrowRight size={20} />
           </button>
-        </div>
+        </form>
       ) : (
         <div className="simulator-result">
-          <div className="result-header">
-            <button 
-              type="button" 
-              className="back-button"
-              onClick={handleBackToForm}
-            >
-              <ArrowLeft size={18} />
-              <span>Modifier</span>
-            </button>
-            <h3>Estimation de votre course</h3>
-          </div>
-          
-          <div className="result-details">
-            <div className="detail-row">
-              <div className="detail-label">
-                <MapPin size={18} />
-                <span>Trajet</span>
-              </div>
-              <div className="detail-value">
-                {formData.pickupAddress.length > 30 
-                  ? formData.pickupAddress.substring(0, 30) + '...' 
-                  : formData.pickupAddress} 
-                {' → '} 
-                {formData.destinationAddress.length > 30 
-                  ? formData.destinationAddress.substring(0, 30) + '...' 
-                  : formData.destinationAddress}
-              </div>
-            </div>
-            
-            <div className="detail-row">
-              <div className="detail-label">
-                <Car size={18} />
-                <span>Véhicule</span>
-              </div>
-              <div className="detail-value">
-                {config.vehicles.types.find(v => v.id === formData.vehicleType)?.name || formData.vehicleType}
-              </div>
-            </div>
-            
-            <div className="result-summary">
-              <div className="summary-row">
-                <span>Distance estimée</span>
-                <span>{simulationResult.distance} km</span>
-              </div>
-              
-              <div className="summary-row">
-                <span>Durée estimée</span>
-                <span>{simulationResult.duration} min</span>
-              </div>
-              
-              {simulationResult.isAirport && (
-                <div className="summary-row">
-                  <span>Supplément aéroport</span>
-                  <span>+{config.pricing.airportSupplement} €</span>
-                </div>
-              )}
-              
-              {simulationResult.isNightFare && (
-                <div className="summary-row">
-                  <span>Supplément nuit</span>
-                  <span>+{config.pricing.nightSupplement} €</span>
-                </div>
-              )}
-              
-              <div className="summary-row total">
-                <span>Prix estimé</span>
-                <span>{formatPrice(simulationResult.price)}</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="simulator-actions">
-            <button 
-              type="button" 
-              className="btn btn-primary btn-block"
-              onClick={handleProceedToBooking}
-            >
-              Réserver maintenant
-              <ArrowRight size={18} className="btn-icon" />
-            </button>
-            
-            <button 
-              type="button" 
-              className="btn btn-outline btn-block"
-              onClick={handleBackToForm}
-            >
-              Modifier ma course
-            </button>
-          </div>
-          
-          <div className="simulator-note">
-            <p>Cette estimation est indicative et peut varier en fonction des conditions de circulation.</p>
-          </div>
+          {/* Le contenu du résultat de simulation serait ici */}
+          <button
+            onClick={handleBackToForm}
+            className="simulator-button"
+          >
+            Retour à la simulation
+          </button>
         </div>
       )}
     </div>
