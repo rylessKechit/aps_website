@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState } from 'react';
 import config from '../config';
-import { isAirportAddress, generateBookingReference } from '../utils/bookingHelpers';
+import { isAirportTransfer, isStationTransfer, isNightFare, calculatePrice, calculateDistanceMatrix, simulateDistance } from '../utils/pricing';
+import { generateBookingReference } from '../utils/bookingHelpers';
 
 // Création du contexte
 const BookingContext = createContext();
@@ -22,7 +23,11 @@ export const BookingProvider = ({ children }) => {
     destinationAddress: '',
     passengers: 1,
     luggage: 0,
-    vehicleType: 'berline'
+    vehicleType: 'berline',
+    customerName: '',
+    customerPhone: '',
+    customerEmail: '',
+    notes: ''
   });
   
   // État pour les résultats d'estimation
@@ -30,6 +35,9 @@ export const BookingProvider = ({ children }) => {
     distance: 0,
     duration: 0,
     price: 0,
+    isAirport: false,
+    isStation: false,
+    isNightFare: false,
     bookingRef: ''
   });
   
@@ -78,108 +86,151 @@ export const BookingProvider = ({ children }) => {
     
     return true;
   };
-
-  const calculateEstimationLogic = async () => {
-    // Vérifier si c'est un trajet aéroport
-    const isAirport = isAirportAddress(bookingData.pickupAddress) || 
-                      isAirportAddress(bookingData.destinationAddress);
-    
-    // Générer une distance aléatoire basée sur le type de trajet
-    const baseDist = isAirport ? getRandomNumber(25, 40) : getRandomNumber(5, 25);
-    
-    // Calculer la distance finale
-    const distance = baseDist;
-    
-    // Calculer la durée (vitesse moyenne de 40km/h en trafic urbain)
-    const duration = Math.round(distance / 40 * 60);
-    
-    // Calculer le prix
-    let price = config.pricing.baseFare + (distance * config.pricing.pricePerKm[bookingData.vehicleType]);
-    
-    // Ajouter les suppléments
-    if (isAirport) {
-      price += config.pricing.airportSupplement;
-    }
-    
-    // Vérifier si tarif de nuit
-    const hour = bookingData.pickupTime.getHours();
-    if (hour >= config.pricing.nightHours.start || hour < config.pricing.nightHours.end) {
-      price += config.pricing.nightSupplement;
-    }
-    
-    // Appliquer le tarif minimum
-    if (price < config.pricing.minimumFare[bookingData.vehicleType]) {
-      price = config.pricing.minimumFare[bookingData.vehicleType];
-    }
-    
-    return {
-      distance: parseFloat(distance.toFixed(1)),
-      duration: duration,
-      price: parseFloat(price.toFixed(2))
-    };
-  };
   
   // Calcul de l'estimation
   const calculateEstimation = async () => {
-    // Ici, vous utiliseriez normalement un service externe comme Google Distance Matrix
-    // Pour l'exemple, on simule une estimation
-    
-    // Vérifier si c'est un trajet aéroport
-    const isAirport = isAirportAddress(bookingData.pickupAddress) || 
-                      isAirportAddress(bookingData.destinationAddress);
-    
-    // Générer une distance aléatoire basée sur le type de trajet
-    const baseDist = isAirport ? getRandomNumber(25, 40) : getRandomNumber(5, 25);
-    
-    // Ajustements selon le nombre de passagers et bagages
-    const paxAdjustment = bookingData.passengers > 4 ? 1.1 : 1;
-    const lugAdjustment = bookingData.luggage > 2 ? 1.05 : 1;
-    
-    // Calculer la distance finale
-    const distance = baseDist * paxAdjustment * lugAdjustment;
-    
-    // Calculer la durée (vitesse moyenne de 40km/h en trafic urbain)
-    const duration = Math.round(distance / 40 * 60);
-    
-    // Calculer le prix en fonction du type de véhicule
-    let price = config.pricing.baseFare + (distance * config.pricing.pricePerKm[bookingData.vehicleType]);
-    
-    // Ajouter les suppléments
-    if (isAirport) {
-      price += config.pricing.airportSupplement;
+    // Vérifier si le formulaire est valide
+    if (!validateBookingForm()) {
+      return false;
     }
     
-    // Vérifier si le tarif de nuit s'applique
-    const hour = bookingData.pickupTime.getHours();
-    if (hour >= config.pricing.nightHours.start || hour < config.pricing.nightHours.end) {
-      price += config.pricing.nightSupplement;
+    try {
+      // Calculer la distance et la durée (en production, utiliser l'API Distance Matrix)
+      let distanceResult;
+      try {
+        distanceResult = await calculateDistanceMatrix(
+          bookingData.pickupAddress,
+          bookingData.destinationAddress
+        );
+      } catch (error) {
+        console.warn('Erreur avec Google Distance Matrix, utilisation du calcul simulé', error);
+        distanceResult = simulateDistance(
+          bookingData.pickupAddress,
+          bookingData.destinationAddress
+        );
+      }
+      
+      const { distance, duration } = distanceResult;
+      
+      // Vérifier si c'est un trajet aéroport
+      const isAirport = isAirportTransfer(
+        bookingData.pickupAddress,
+        bookingData.destinationAddress
+      );
+      
+      // Vérifier si c'est un trajet gare
+      const isStation = isStationTransfer(
+        bookingData.pickupAddress,
+        bookingData.destinationAddress
+      );
+      
+      // Vérifier si c'est un tarif de nuit
+      const isNight = isNightFare(bookingData.pickupTime);
+      
+      // Calculer le prix
+      const price = calculatePrice({
+        distance,
+        duration,
+        vehicleType: bookingData.vehicleType,
+        isAirport,
+        isStation,
+        isNightFare: isNight
+      });
+      
+      // Générer un numéro de réservation unique
+      const bookingRef = generateBookingReference();
+      
+      // Mettre à jour les résultats d'estimation
+      setEstimationResults({
+        distance: parseFloat(distance.toFixed(1)),
+        duration: Math.round(duration),
+        price,
+        isAirport,
+        isStation,
+        isNightFare: isNight,
+        bookingRef
+      });
+      
+      // Passer à l'étape d'estimation
+      setBookingStep('estimation');
+      
+      return true;
+    } catch (error) {
+      console.error('Erreur lors du calcul de l\'estimation:', error);
+      alert('Une erreur est survenue lors du calcul de l\'estimation. Veuillez réessayer.');
+      return false;
     }
-    
-    // Appliquer le tarif minimum si le prix calculé est inférieur
-    if (price < config.pricing.minimumFare[bookingData.vehicleType]) {
-      price = config.pricing.minimumFare[bookingData.vehicleType];
-    }
-    
-    // Mettre à jour les résultats d'estimation
-    setEstimationResults({
-      distance: parseFloat(distance.toFixed(1)),
-      duration: duration,
-      price: parseFloat(price.toFixed(2)),
-      bookingRef: generateBookingReference()
-    });
-    
-    // Passer à l'étape d'estimation
-    setBookingStep('estimation');
-    
-    return { distance, duration, price };
   };
   
   // Confirmation de la réservation
-  const confirmBooking = () => {
-    // Ici, vous enverriez normalement les données à votre API
-    // Pour l'exemple, on simule une confirmation réussie
-    setBookingStep('confirmation');
-    return true;
+  const confirmBooking = async () => {
+    try {
+      // Vérifier si toutes les informations client sont disponibles
+      if (!bookingData.customerName || !bookingData.customerPhone || !bookingData.customerEmail) {
+        alert('Veuillez remplir tous les champs obligatoires.');
+        return false;
+      }
+      
+      // En production, ici vous feriez un appel API pour créer la réservation
+      // Pour l'exemple, on simule une confirmation réussie
+      
+      // Passer à l'étape de confirmation
+      setBookingStep('confirmation');
+      
+      return true;
+    } catch (error) {
+      console.error('Erreur lors de la confirmation de la réservation:', error);
+      alert('Une erreur est survenue lors de la confirmation de la réservation. Veuillez réessayer.');
+      return false;
+    }
+  };
+  
+  // Simulation d'estimation (pour le widget de simulation sur la page d'accueil)
+  const simulateEstimation = async (simulationData) => {
+    try {
+      // Calculer la distance et la durée (en production, utiliser l'API Distance Matrix)
+      const { distance, duration } = simulateDistance(
+        simulationData.pickupAddress,
+        simulationData.destinationAddress
+      );
+      
+      // Vérifier si c'est un trajet aéroport
+      const isAirport = isAirportTransfer(
+        simulationData.pickupAddress,
+        simulationData.destinationAddress
+      );
+      
+      // Vérifier si c'est un trajet gare
+      const isStation = isStationTransfer(
+        simulationData.pickupAddress,
+        simulationData.destinationAddress
+      );
+      
+      // Vérifier si c'est un tarif de nuit
+      const isNight = isNightFare(simulationData.pickupTime);
+      
+      // Calculer le prix
+      const price = calculatePrice({
+        distance,
+        duration,
+        vehicleType: simulationData.vehicleType,
+        isAirport,
+        isStation,
+        isNightFare: isNight
+      });
+      
+      return {
+        distance: parseFloat(distance.toFixed(1)),
+        duration: Math.round(duration),
+        price,
+        isAirport,
+        isStation,
+        isNightFare: isNight
+      };
+    } catch (error) {
+      console.error('Erreur lors de la simulation:', error);
+      throw error;
+    }
   };
   
   // Nouvelle réservation
@@ -193,7 +244,11 @@ export const BookingProvider = ({ children }) => {
       destinationAddress: '',
       passengers: 1,
       luggage: 0,
-      vehicleType: 'berline'
+      vehicleType: 'berline',
+      customerName: '',
+      customerPhone: '',
+      customerEmail: '',
+      notes: ''
     });
     
     // Réinitialiser les résultats
@@ -201,6 +256,9 @@ export const BookingProvider = ({ children }) => {
       distance: 0,
       duration: 0,
       price: 0,
+      isAirport: false,
+      isStation: false,
+      isNightFare: false,
       bookingRef: ''
     });
     
@@ -211,15 +269,27 @@ export const BookingProvider = ({ children }) => {
   // Forme simplifiée du formulaire (pour la page d'accueil)
   const [isSimpleForm, setIsSimpleForm] = useState(true);
   
-  // Fonctions utilitaires
-  const getRandomNumber = (min, max) => {
-    return Math.random() * (max - min) + min;
-  };
-
-  const simulateEstimation = async () => {
-    // Code similaire à calculateEstimation mais sans changer d'étape
-    const estimationResult = await calculateEstimationLogic();
-    return estimationResult;
+  // Initialiser les données de réservation à partir de l'état externe (par exemple, de la simulation)
+  const initializeFromState = (state) => {
+    if (state && state.formData && state.simulationResult) {
+      setBookingData({
+        ...bookingData,
+        ...state.formData
+      });
+      
+      setEstimationResults({
+        ...estimationResults,
+        ...state.simulationResult,
+        bookingRef: generateBookingReference()
+      });
+      
+      // Passer directement à l'étape d'estimation
+      setBookingStep('estimation');
+      
+      return true;
+    }
+    
+    return false;
   };
   
   // Fournir le contexte
@@ -237,7 +307,7 @@ export const BookingProvider = ({ children }) => {
       isSimpleForm,
       setIsSimpleForm,
       simulateEstimation,
-      simulateEstimation
+      initializeFromState
     }}>
       {children}
     </BookingContext.Provider>

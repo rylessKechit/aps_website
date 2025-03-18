@@ -3,7 +3,6 @@
  */
 import config from '../config';
 
-
 /**
  * Simule la distance entre deux points (fallback si Google Maps API échoue)
  * @param {string} origin - Adresse de départ
@@ -14,11 +13,19 @@ export const simulateDistance = (origin, destination) => {
   // Vérifier si c'est un trajet aéroport
   const isAirport = isAirportTransfer(origin, destination);
   
+  // Vérifier si c'est un trajet gare
+  const isStation = isStationTransfer(origin, destination);
+  
   // Simuler une distance en fonction du type de trajet
   if (isAirport) {
     return {
       distance: Math.random() * (40 - 25) + 25, // 25-40 km pour un aéroport
       duration: Math.random() * (60 - 30) + 30, // 30-60 minutes
+    };
+  } else if (isStation) {
+    return {
+      distance: Math.random() * (25 - 12) + 12, // 12-25 km pour une gare
+      duration: Math.random() * (40 - 20) + 20, // 20-40 minutes
     };
   } else {
     return {
@@ -27,6 +34,7 @@ export const simulateDistance = (origin, destination) => {
     };
   }
 };
+
 /**
  * Vérifie si un trajet inclut une adresse d'aéroport
  * @param {string} pickupAddress - Adresse de départ
@@ -42,6 +50,28 @@ export const isAirportTransfer = (pickupAddress, destinationAddress) => {
   ];
   
   return config.booking.airportKeywords.some(keyword => 
+    addresses.some(address => address.includes(keyword))
+  );
+};
+
+/**
+ * Vérifie si un trajet inclut une adresse de gare
+ * @param {string} pickupAddress - Adresse de départ
+ * @param {string} destinationAddress - Adresse de destination
+ * @returns {boolean} - True si une adresse contient un mot-clé de gare
+ */
+export const isStationTransfer = (pickupAddress, destinationAddress) => {
+  if (!pickupAddress && !destinationAddress) return false;
+  
+  const addresses = [
+    pickupAddress ? pickupAddress.toLowerCase() : '',
+    destinationAddress ? destinationAddress.toLowerCase() : ''
+  ];
+  
+  // Mots-clés pour les gares
+  const stationKeywords = ['gare', 'station', 'tgv', 'ter', 'sncf'];
+  
+  return stationKeywords.some(keyword => 
     addresses.some(address => address.includes(keyword))
   );
 };
@@ -67,6 +97,7 @@ export const isNightFare = (dateTime) => {
  * @param {number} params.duration - Durée en minutes (optionnel)
  * @param {string} params.vehicleType - Type de véhicule
  * @param {boolean} params.isAirport - Si c'est un trajet aéroport
+ * @param {boolean} params.isStation - Si c'est un trajet gare
  * @param {boolean} params.isNightFare - Si c'est un tarif de nuit
  * @param {number} params.waitingTime - Temps d'attente en minutes (optionnel)
  * @returns {number} - Prix estimé en euros
@@ -76,6 +107,7 @@ export const calculatePrice = ({
   duration,
   vehicleType = 'berline',
   isAirport = false,
+  isStation = false,
   isNightFare = false,
   waitingTime = 0
 }) => {
@@ -97,6 +129,11 @@ export const calculatePrice = ({
   // Supplément aéroport
   if (isAirport) {
     price += config.pricing.airportSupplement;
+  }
+  
+  // Supplément gare
+  if (isStation && !isAirport) { // Éviter de doubler les suppléments
+    price += config.pricing.stationSupplement || 5; // Ajouter un supplément gare par défaut si non défini
   }
   
   // Supplément nuit
@@ -177,12 +214,14 @@ export const calculateDistanceMatrix = async (origin, destination) => {
  * Calcule les suppléments pour un trajet
  * @param {Object} params - Paramètres pour le calcul
  * @param {boolean} params.isAirport - Si c'est un trajet aéroport
+ * @param {boolean} params.isStation - Si c'est un trajet gare
  * @param {boolean} params.isNightFare - Si c'est un tarif de nuit
  * @param {number} params.waitingTime - Temps d'attente en minutes (optionnel)
- * @returns {Object} - Liste des suppléments {name, amount}
+ * @returns {Object[]} - Liste des suppléments {name, amount}
  */
 export const calculateSurcharges = ({
   isAirport = false,
+  isStation = false,
   isNightFare = false,
   waitingTime = 0
 }) => {
@@ -193,6 +232,14 @@ export const calculateSurcharges = ({
     surcharges.push({
       name: 'Supplément aéroport',
       amount: config.pricing.airportSupplement
+    });
+  }
+  
+  // Supplément gare
+  if (isStation && !isAirport) { // Éviter de doubler les suppléments
+    surcharges.push({
+      name: 'Supplément gare',
+      amount: config.pricing.stationSupplement || 5
     });
   }
   
@@ -242,6 +289,9 @@ export const calculateDetailedEstimation = ({
   // Déterminer si c'est un trajet aéroport
   const isAirport = isAirportTransfer(pickupAddress, destinationAddress);
   
+  // Déterminer si c'est un trajet gare
+  const isStation = isStationTransfer(pickupAddress, destinationAddress);
+  
   // Déterminer si c'est un tarif de nuit
   const isNight = isNightFare(pickupDateTime);
   
@@ -252,6 +302,7 @@ export const calculateDetailedEstimation = ({
   // Calculer les suppléments
   const surcharges = calculateSurcharges({
     isAirport,
+    isStation,
     isNightFare: isNight,
     waitingTime
   });
@@ -286,6 +337,7 @@ export const calculateDetailedEstimation = ({
     estimatedDistance: distance,
     estimatedDuration: duration,
     isAirportTransfer: isAirport,
+    isStationTransfer: isStation,
     isNightFare: isNight,
     currency: 'EUR'
   };

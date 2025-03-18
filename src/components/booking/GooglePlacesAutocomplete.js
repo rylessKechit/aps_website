@@ -4,6 +4,7 @@ import config from '../../config';
 
 /**
  * Composant d'autocomplete d'adresse utilisant Google Places API
+ * ou une simulation en mode développement
  * 
  * @param {Object} props
  * @param {string} props.id - ID du champ
@@ -30,6 +31,8 @@ const GooglePlacesAutocomplete = ({
   const autocompleteRef = useRef(null);
   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
   const [scriptError, setScriptError] = useState(null);
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   // Chargement du script Google Maps
   useEffect(() => {
@@ -49,6 +52,8 @@ const GooglePlacesAutocomplete = ({
 
     script.onerror = () => {
       setScriptError('Impossible de charger Google Maps API');
+      // Utiliser des suggestions simulées si l'API échoue
+      console.warn('Échec du chargement de l\'API, utilisation de suggestions simulées');
     };
 
     document.head.appendChild(script);
@@ -93,16 +98,99 @@ const GooglePlacesAutocomplete = ({
           };
           
           onChange(event);
+          setShowSuggestions(false);
         }
       });
+
+      // Observer les changements du DOM pour supprimer le "powered by Google"
+      const observer = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+          if (mutation.type === 'childList') {
+            const pacContainers = document.querySelectorAll('.pac-container');
+            pacContainers.forEach(container => {
+              // S'assurer que le "powered by Google" est supprimé
+              if (container.lastChild && container.lastChild.tagName === 'DIV' && 
+                  container.lastChild.textContent.includes('Google')) {
+                container.removeChild(container.lastChild);
+              }
+            });
+          }
+        }
+      });
+
+      // Observer les changements au niveau du body
+      observer.observe(document.body, { 
+        childList: true, 
+        subtree: true 
+      });
+
+      return () => {
+        observer.disconnect();
+      };
     } catch (error) {
       console.error('Erreur lors de l\'initialisation de l\'autocomplete :', error);
+      setScriptError('Erreur avec l\'autocomplétion. Saisissez votre adresse complète.');
     }
   }, [isScriptLoaded, name, onChange]);
 
-  // Créer un gestionnaire d'événements personnalisé pour les changements manuels
-  const handleChange = (e) => {
+  // Simuler des suggestions si l'API n'est pas disponible ou échoue
+  const simulateSuggestions = (query) => {
+    if (!query || query.length < 3) return [];
+    
+    const mockAddresses = [
+      ...config.booking.commonAddresses,
+      'Aéroport d\'Orly, 94310 Orly, France',
+      'Aéroport Roissy Charles de Gaulle, 95700, France',
+      'Gare de Massy TGV, 91300 Massy, France',
+      'Gare de Lyon, Paris, France',
+      'Gare Montparnasse, Paris, France',
+      'Centre Commercial Évry 2, Évry, France',
+      'Université Paris-Saclay, Orsay, France',
+      'Place de la République, Paris, France',
+      'La Défense, Paris, France',
+      'Tour Eiffel, Paris, France',
+      'Disneyland Paris, Marne-la-Vallée, France',
+      'Château de Versailles, Versailles, France'
+    ];
+    
+    return mockAddresses
+      .filter(addr => addr.toLowerCase().includes(query.toLowerCase()))
+      .slice(0, 5);
+  };
+
+  // Gérer le changement de texte
+  const handleInputChange = (e) => {
+    const { value } = e.target;
     onChange(e);
+    
+    // En cas d'échec de l'API, utiliser des suggestions simulées
+    if (scriptError || !isScriptLoaded) {
+      const newSuggestions = simulateSuggestions(value);
+      setSuggestions(newSuggestions);
+      setShowSuggestions(newSuggestions.length > 0);
+    }
+  };
+
+  // Gérer la sélection d'une suggestion
+  const handleSuggestionClick = (suggestion) => {
+    const event = { 
+      target: { 
+        name, 
+        value: suggestion
+      } 
+    };
+    
+    onChange(event);
+    setShowSuggestions(false);
+  };
+
+  // Gérer le focus sur l'input
+  const handleFocus = () => {
+    if (scriptError || !isScriptLoaded) {
+      const newSuggestions = simulateSuggestions(value);
+      setSuggestions(newSuggestions);
+      setShowSuggestions(newSuggestions.length > 0);
+    }
   };
 
   // Classes CSS
@@ -125,25 +213,41 @@ const GooglePlacesAutocomplete = ({
         </label>
       )}
 
-      <div className="input-icon-wrapper">
-        <MapPin size={18} className="input-icon" />
+      <div className="address-input-wrapper">
         <input
           ref={inputRef}
           type="text"
           id={id}
           name={name}
           value={value}
-          onChange={handleChange}
+          onChange={handleInputChange}
+          onFocus={handleFocus}
+          onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
           placeholder={placeholder}
           className={inputClasses}
           required={required}
-          disabled={!isScriptLoaded}
           {...rest}
         />
+        <MapPin className="address-input-icon" size={18} />
+        
+        {/* Suggestions simulées en cas d'erreur */}
+        {showSuggestions && (scriptError || !isScriptLoaded) && (
+          <div className="address-suggestions">
+            {suggestions.map((suggestion, index) => (
+              <div 
+                key={index} 
+                className="suggestion-item"
+                onClick={() => handleSuggestionClick(suggestion)}
+              >
+                {suggestion}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {error && <div className="error-message">{error}</div>}
-      {scriptError && <div className="error-message">{scriptError}</div>}
+      {scriptError && <div className="helper-text">{scriptError}</div>}
     </div>
   );
 };

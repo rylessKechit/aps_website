@@ -71,6 +71,27 @@ const BookingForm = ({ isSimple = true, onCompleteBooking }) => {
       vehicleType
     }));
   };
+  
+  // Gérer l'incrémentation/décrémentation des passagers et bagages
+  const handleNumberChange = (field, increment) => {
+    setFormData(prev => {
+      let newValue;
+      if (field === 'passengers') {
+        newValue = increment 
+          ? Math.min(prev.passengers + 1, config.booking.maxPassengers) 
+          : Math.max(prev.passengers - 1, 1);
+      } else if (field === 'luggage') {
+        newValue = increment 
+          ? Math.min(prev.luggage + 1, config.booking.maxLuggage) 
+          : Math.max(prev.luggage - 1, 0);
+      }
+      
+      return {
+        ...prev,
+        [field]: newValue
+      };
+    });
+  };
 
   // Soumettre le formulaire
   const handleSubmit = (e) => {
@@ -109,8 +130,8 @@ const BookingForm = ({ isSimple = true, onCompleteBooking }) => {
       <div className="form-row">
         <div className="form-group">
           <label htmlFor="pickupDate">Date</label>
-          <div className="input-icon-wrapper">
-            <Calendar size={18} className="input-icon" />
+          <div className="address-input-wrapper">
+            <Calendar size={18} className="address-input-icon" />
             <DatePicker
               id="pickupDate"
               selected={formData.pickupDate}
@@ -124,8 +145,8 @@ const BookingForm = ({ isSimple = true, onCompleteBooking }) => {
         
         <div className="form-group">
           <label htmlFor="pickupTime">Heure</label>
-          <div className="input-icon-wrapper">
-            <Clock size={18} className="input-icon" />
+          <div className="address-input-wrapper">
+            <Clock size={18} className="address-input-icon" />
             <DatePicker
               id="pickupTime"
               selected={formData.pickupTime}
@@ -170,37 +191,67 @@ const BookingForm = ({ isSimple = true, onCompleteBooking }) => {
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="passengers">Passagers</label>
-              <div className="input-icon-wrapper">
-                <Users size={18} className="input-icon" />
-                <select
+              <div className="number-input-container">
+                <input
+                  type="number"
                   id="passengers"
                   name="passengers"
                   value={formData.passengers}
                   onChange={handleChange}
-                  className="form-control"
+                  className="form-control number-input"
+                  min="1"
+                  max={config.booking.maxPassengers}
+                  readOnly
+                />
+                <button 
+                  type="button" 
+                  className="number-control decrement"
+                  onClick={() => handleNumberChange('passengers', false)}
+                  disabled={formData.passengers <= 1}
                 >
-                  {Array.from({ length: config.booking.maxPassengers }, (_, i) => i + 1).map(num => (
-                    <option key={num} value={num}>{num}</option>
-                  ))}
-                </select>
+                  -
+                </button>
+                <button 
+                  type="button" 
+                  className="number-control increment"
+                  onClick={() => handleNumberChange('passengers', true)}
+                  disabled={formData.passengers >= config.booking.maxPassengers}
+                >
+                  +
+                </button>
               </div>
             </div>
             
             <div className="form-group">
               <label htmlFor="luggage">Bagages</label>
-              <div className="input-icon-wrapper">
-                <Briefcase size={18} className="input-icon" />
-                <select
+              <div className="number-input-container">
+                <input
+                  type="number"
                   id="luggage"
                   name="luggage"
                   value={formData.luggage}
                   onChange={handleChange}
-                  className="form-control"
+                  className="form-control number-input"
+                  min="0"
+                  max={config.booking.maxLuggage}
+                  readOnly
+                />
+                <button 
+                  type="button" 
+                  className="number-control decrement"
+                  onClick={() => handleNumberChange('luggage', false)}
+                  disabled={formData.luggage <= 0}
                 >
-                  {Array.from({ length: config.booking.maxLuggage + 1 }, (_, i) => i).map(num => (
-                    <option key={num} value={num}>{num}</option>
-                  ))}
-                </select>
+                  -
+                </button>
+                <button 
+                  type="button" 
+                  className="number-control increment"
+                  onClick={() => handleNumberChange('luggage', true)}
+                  disabled={formData.luggage >= config.booking.maxLuggage}
+                >
+                  +
+                </button>
               </div>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useLocation } from 'react-router-dom';
 import BookingForm from '../components/booking/BookingForm';
 import EstimationResult from '../components/booking/EstimationResult';
 import BookingConfirmation from '../components/booking/BookingConfirmation';
@@ -7,7 +8,8 @@ import { useBooking } from '../context/BookingContext';
 import MapView from '../components/booking/MapView';
 
 const BookingPage = () => {
-  const { bookingStep, setIsSimpleForm } = useBooking();
+  const location = useLocation();
+  const { bookingStep, setIsSimpleForm, initializeFromState } = useBooking();
   
   // Utiliser le formulaire complet pour la page de réservation
   useEffect(() => {
@@ -15,7 +17,12 @@ const BookingPage = () => {
     
     // Scroll to top when component mounts
     window.scrollTo(0, 0);
-  }, [setIsSimpleForm]);
+    
+    // Initialiser à partir des données de state (venant du simulateur)
+    if (location.state) {
+      initializeFromState(location.state);
+    }
+  }, [setIsSimpleForm, location.state, initializeFromState]);
   
   // Animation de transition entre les étapes
   const pageVariants = {

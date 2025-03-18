@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, MapPin, Calendar, Clock } from 'lucide-react';
+import { ArrowRight, MapPin, Calendar, Clock, ArrowLeft, Users, Briefcase, Car } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { isAirportTransfer, isNightFare, calculatePrice, formatPrice } from '../../utils/pricing';
+import { isAirportTransfer, isNightFare, calculatePrice, formatPrice, formatDistance, formatDuration } from '../../utils/pricing';
+import GooglePlacesAutocomplete from './GooglePlacesAutocomplete';
 import config from '../../config';
 
 const BookingSimulator = () => {
@@ -128,7 +129,10 @@ const BookingSimulator = () => {
       );
       
       // Déterminer si c'est un trajet aéroport
-      const isAirport = isAirportTransfer(formData.pickupAddress, formData.destinationAddress);
+      const isAirport = isAirportTransfer(
+        formData.pickupAddress,
+        formData.destinationAddress
+      );
       
       // Déterminer si c'est un tarif de nuit
       const isNight = isNightFare(formData.pickupTime);
@@ -179,6 +183,12 @@ const BookingSimulator = () => {
     });
   };
   
+  // Trouver le nom du véhicule
+  const getVehicleName = (vehicleId) => {
+    const vehicle = config.vehicles.types.find(v => v.id === vehicleId);
+    return vehicle ? vehicle.name : vehicleId;
+  };
+  
   return (
     <div className="simulator-container">
       <h2 className="simulator-title">Simulez votre course</h2>
@@ -221,37 +231,27 @@ const BookingSimulator = () => {
           </div>
           
           <div className="form-group">
-            <div className="address-input-wrapper">
-              <input
-                type="text"
-                id="pickupAddress"
-                name="pickupAddress"
-                value={formData.pickupAddress}
-                onChange={handleChange}
-                className="form-control"
-                placeholder="Adresse de départ"
-                required
-              />
-              <MapPin className="address-input-icon" size={18} />
-            </div>
-            <label htmlFor="pickupAddress" className="sr-only">Départ*</label>
+            <GooglePlacesAutocomplete
+              id="pickupAddress"
+              name="pickupAddress"
+              value={formData.pickupAddress}
+              onChange={handleChange}
+              placeholder="Adresse de départ"
+              label="Départ"
+              required
+            />
           </div>
           
           <div className="form-group">
-            <div className="address-input-wrapper">
-              <input
-                type="text"
-                id="destinationAddress"
-                name="destinationAddress"
-                value={formData.destinationAddress}
-                onChange={handleChange}
-                className="form-control"
-                placeholder="Adresse de destination"
-                required
-              />
-              <MapPin className="address-input-icon" size={18} />
-            </div>
-            <label htmlFor="destinationAddress" className="sr-only">Destination*</label>
+            <GooglePlacesAutocomplete
+              id="destinationAddress"
+              name="destinationAddress"
+              value={formData.destinationAddress}
+              onChange={handleChange}
+              placeholder="Adresse de destination"
+              label="Destination"
+              required
+            />
           </div>
           
           <div className="form-row">
@@ -377,13 +377,125 @@ const BookingSimulator = () => {
         </form>
       ) : (
         <div className="simulator-result">
-          {/* Le contenu du résultat de simulation serait ici */}
-          <button
-            onClick={handleBackToForm}
-            className="simulator-button"
-          >
-            Retour à la simulation
-          </button>
+          <div className="result-header">
+            <button 
+              className="back-button"
+              onClick={handleBackToForm}
+            >
+              <ArrowLeft size={16} />
+              <span>Retour</span>
+            </button>
+            <h3>Résultat de simulation</h3>
+          </div>
+          
+          <div className="result-details">
+            <div className="detail-row">
+              <div className="detail-label">
+                <MapPin size={18} />
+                <span>Départ</span>
+              </div>
+              <div className="detail-value">{formData.pickupAddress}</div>
+            </div>
+            
+            <div className="detail-row">
+              <div className="detail-label">
+                <MapPin size={18} />
+                <span>Destination</span>
+              </div>
+              <div className="detail-value">{formData.destinationAddress}</div>
+            </div>
+            
+            <div className="detail-row">
+              <div className="detail-label">
+                <Calendar size={18} />
+                <span>Date</span>
+              </div>
+              <div className="detail-value">
+                {formData.pickupDate.toLocaleDateString('fr-FR')}
+              </div>
+            </div>
+            
+            <div className="detail-row">
+              <div className="detail-label">
+                <Clock size={18} />
+                <span>Heure</span>
+              </div>
+              <div className="detail-value">
+                {formData.pickupTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+              </div>
+            </div>
+            
+            <div className="detail-row">
+              <div className="detail-label">
+                <Users size={18} />
+                <span>Passagers</span>
+              </div>
+              <div className="detail-value">{formData.passengers}</div>
+            </div>
+            
+            <div className="detail-row">
+              <div className="detail-label">
+                <Briefcase size={18} />
+                <span>Bagages</span>
+              </div>
+              <div className="detail-value">{formData.luggage}</div>
+            </div>
+            
+            <div className="detail-row">
+              <div className="detail-label">
+                <Car size={18} />
+                <span>Véhicule</span>
+              </div>
+              <div className="detail-value">{getVehicleName(formData.vehicleType)}</div>
+            </div>
+          </div>
+          
+          <div className="result-summary">
+            <div className="summary-row">
+              <span>Distance estimée</span>
+              <span>{formatDistance(simulationResult.distance)}</span>
+            </div>
+            <div className="summary-row">
+              <span>Durée estimée</span>
+              <span>{formatDuration(simulationResult.duration)}</span>
+            </div>
+            {simulationResult.isAirport && (
+              <div className="summary-row">
+                <span>Supplément aéroport</span>
+                <span>{formatPrice(config.pricing.airportSupplement)}</span>
+              </div>
+            )}
+            {simulationResult.isNightFare && (
+              <div className="summary-row">
+                <span>Supplément de nuit</span>
+                <span>{formatPrice(config.pricing.nightSupplement)}</span>
+              </div>
+            )}
+            <div className="summary-row total">
+              <span>Prix estimé</span>
+              <span>{formatPrice(simulationResult.price)}</span>
+            </div>
+          </div>
+          
+          <div className="simulator-actions">
+            <button 
+              onClick={handleProceedToBooking}
+              className="simulator-button"
+            >
+              Réserver maintenant
+              <ArrowRight size={20} />
+            </button>
+            <button
+              onClick={handleBackToForm}
+              className="btn btn-outline btn-block"
+            >
+              Modifier ma demande
+            </button>
+          </div>
+          
+          <p className="simulator-note">
+            Cette estimation est basée sur une circulation normale. Le prix final peut varier en fonction des conditions de circulation.
+          </p>
         </div>
       )}
     </div>
