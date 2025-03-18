@@ -1,0 +1,153 @@
+/* Styles pour la section Pourquoi nous choisir */
+
+.why-us-section {
+    padding: 80px 0;
+    background-color: #fff;
+  }
+  
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+  
+  /* En-tête de section */
+  .section-header {
+    text-align: center;
+    margin-bottom: 60px;
+  }
+  
+  .section-header h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 15px;
+  }
+  
+  .section-header p {
+    font-size: 1.2rem;
+    color: #666;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  /* Grille d'avantages */
+  .advantages-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+  }
+  
+  /* Carte d'avantage */
+  .advantage-card {
+    background-color: white;
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+    border-bottom: 3px solid transparent;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .advantage-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    border-bottom: 3px solid #FFCA28;
+  }
+  
+  /* Icône */
+  .advantage-icon {
+    width: 80px;
+    height: 80px;
+    background-color: #FFF8E1;
+    color: #FFCA28;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    transition: all 0.3s ease;
+  }
+  
+  .advantage-card:hover .advantage-icon {
+    background-color: #FFCA28;
+    color: #fff;
+    transform: scale(1.1) rotate(5deg);
+  }
+  
+  /* Titre */
+  .advantage-card h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 15px;
+    transition: color 0.3s ease;
+  }
+  
+  .advantage-card:hover h3 {
+    color: #000;
+  }
+  
+  /* Description */
+  .advantage-card p {
+    color: #666;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0;
+  }
+  
+  /* Animation d'un élément qui attire l'attention */
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  
+  .advantage-card:nth-child(2) .advantage-icon {
+    animation: pulse 2s infinite;
+  }
+  
+  /* Responsive */
+  @media (max-width: 992px) {
+    .advantages-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .why-us-section {
+      padding: 60px 0;
+    }
+    
+    .section-header h2 {
+      font-size: 2rem;
+    }
+    
+    .advantages-grid {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    
+    .advantage-card {
+      padding: 25px;
+    }
+  }
+  
+  /* Transition pour le changement de thème (optionnel) */
+  .why-us-section, 
+  .advantage-card, 
+  .advantage-icon, 
+  .advantage-card h3, 
+  .advantage-card p {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  }

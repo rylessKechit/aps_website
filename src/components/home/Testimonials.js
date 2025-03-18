@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import Slider from 'react-slick';
@@ -41,38 +41,38 @@ const Testimonials = () => {
   const testimonials = [
     {
       id: 1,
-      name: 'Sophie L.',
-      location: 'Massy',
-      rating: 5,
-      comment: "Service exceptionnel ! Chauffeur ponctuel et très professionnel. Je recommande vivement pour tous vos déplacements en Essonne.",
-    },
-    {
-      id: 2,
-      name: 'Thomas D.',
-      location: 'Palaiseau',
-      rating: 5,
-      comment: "J'utilise régulièrement APS TAXIS pour mes déplacements professionnels. Service fiable et de qualité à chaque fois.",
-    },
-    {
-      id: 3,
       name: 'Martine B.',
       location: 'Longjumeau',
       rating: 4.5,
       comment: "Très satisfaite de la prise en charge pour mes rendez-vous médicaux. Chauffeurs courtois et véhicules impeccables.",
     },
     {
-      id: 4,
+      id: 2,
       name: 'Jean-Pierre M.',
       location: 'Évry',
       rating: 5,
       comment: "Je prends ce taxi chaque semaine pour me rendre à l'aéroport. Jamais un retard et toujours une conduite sécurisante.",
     },
     {
-      id: 5,
+      id: 3,
       name: 'Nathalie R.',
       location: 'Orsay',
       rating: 5,
       comment: "Le chauffeur connaissait parfaitement la région. Très pratique quand on n'est pas du coin !",
+    },
+    {
+      id: 4,
+      name: 'Thomas D.',
+      location: 'Palaiseau',
+      rating: 5,
+      comment: "J'utilise régulièrement APS TAXIS pour mes déplacements professionnels. Service fiable et de qualité à chaque fois.",
+    },
+    {
+      id: 5,
+      name: 'Sophie L.',
+      location: 'Massy',
+      rating: 5,
+      comment: "Service exceptionnel ! Chauffeur ponctuel et très professionnel. Je recommande vivement pour tous vos déplacements en Essonne.",
     }
   ];
   

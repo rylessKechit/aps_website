@@ -20,6 +20,10 @@ import './assets/styles/App.css';
 import './assets/styles/animations.css';
 import './assets/styles/vehiclesCard.css';
 import './assets/styles/services.css';
+import './assets/styles/serviceArea.css';
+import  './assets/styles/testimonials.css';
+import './assets/styles/app-promotion.css';
+import './assets/styles/why-us.css';
 
 function App() {
   return (

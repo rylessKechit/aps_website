@@ -1,0 +1,199 @@
+/* Styles pour la section Témoignages dans React */
+
+.testimonials-section {
+    padding: 80px 0;
+    position: relative;
+  }
+  
+  .section-header {
+    text-align: center;
+    margin-bottom: 50px;
+  }
+  
+  .section-header h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    position: relative;
+  }
+  
+  .section-header h2::after {
+    content: '';
+    display: block;
+    width: 80px;
+    height: 4px;
+    background-color: #FFCA28;
+    margin: 15px auto 0;
+    border-radius: 2px;
+  }
+  
+  .section-header p {
+    color: #757575;
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  /* Conteneur du slider */
+  .testimonials-slider-container {
+    position: relative;
+    padding: 20px 0;
+  }
+  
+  /* Navigation du slider */
+  .slider-navigation {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 100%;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+  }
+  
+  .slider-nav-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: none;
+    transition: all 0.3s ease;
+    pointer-events: auto;
+  }
+  
+  .slider-nav-btn:hover {
+    background-color: #FFCA28;
+    transform: scale(1.05);
+  }
+  
+  .prev-btn {
+    margin-left: -20px;
+  }
+  
+  .next-btn {
+    margin-right: -20px;
+  }
+  
+  /* Slide individuel */
+  .testimonial-slide {
+    padding: 15px;
+    box-sizing: border-box;
+  }
+  
+  .testimonial-content {
+    background-color: white;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .testimonial-content:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Rating avec étoiles */
+  .rating {
+    display: flex;
+    margin-bottom: 15px;
+  }
+  
+  .half-star {
+    position: relative;
+    display: inline-block;
+  }
+  
+  /* Texte du témoignage */
+  .testimonial-text {
+    flex: 1;
+    font-style: italic;
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  
+  /* Informations du client */
+  .client-info {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+  }
+  
+  .client-name {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+  }
+  
+  .client-location {
+    color: #757575;
+    font-size: 0.9rem;
+  }
+  
+  /* CTA Section */
+  .testimonials-cta {
+    text-align: center;
+    margin-top: 40px;
+  }
+  
+  .testimonials-cta p {
+    margin-bottom: 15px;
+    color: #757575;
+  }
+  
+  /* Customisation react-slick */
+  .slick-dots {
+    bottom: -40px;
+  }
+  
+  .slick-dots li button:before {
+    font-size: 12px;
+    color: #E0E0E0;
+    opacity: 1;
+  }
+  
+  .slick-dots li.slick-active button:before {
+    color: #FFCA28;
+    opacity: 1;
+  }
+  
+  /* Responsive */
+  @media (max-width: 992px) {
+    .slider-nav-btn {
+      width: 35px;
+      height: 35px;
+    }
+    
+    .prev-btn {
+      margin-left: 0;
+    }
+    
+    .next-btn {
+      margin-right: 0;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .testimonials-section {
+      padding: 60px 0;
+    }
+    
+    .section-header h2 {
+      font-size: 2rem;
+    }
+    
+    .testimonial-content {
+      padding: 20px;
+    }
+  }

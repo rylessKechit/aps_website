@@ -1,0 +1,205 @@
+/* Styles pour la section Zone de Service */
+
+/* Styles de la section */
+.service-area-section {
+    padding: 80px 0;
+    background-color: #f9f9f9;
+  }
+  
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+  
+  /* Styles de l'en-tête */
+  .section-header {
+    text-align: center;
+    margin-bottom: 50px;
+  }
+  
+  .section-header h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 10px;
+    position: relative;
+  }
+  
+  .section-header h2::after {
+    content: '';
+    display: block;
+    width: 80px;
+    height: 4px;
+    background-color: #FFCA28;
+    margin: 15px auto 0;
+    border-radius: 2px;
+  }
+  
+  .section-header p {
+    font-size: 1.2rem;
+    color: #666;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  /* Layout principal - flexbox pour la mise en page côte à côte */
+  .service-area-content {
+    display: flex;
+    gap: 30px;
+    align-items: stretch;
+  }
+  
+  /* Styles de la carte */
+  .map-container {
+    flex: 1;
+    background-color: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    height: 500px;
+  }
+  
+  .map-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+  
+  /* Styles du contenu textuel */
+  .area-info {
+    flex: 1;
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 30px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .area-info h3 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 20px;
+  }
+  
+  .area-info p {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 25px;
+  }
+  
+  /* Styles des fonctionnalités avec icônes */
+  .service-highlights {
+    margin: 30px 0;
+  }
+  
+  .highlight {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 25px;
+  }
+  
+  .highlight svg {
+    background-color: #FFF9C4;
+    color: #FFCA28;
+    padding: 12px;
+    border-radius: 50%;
+    min-width: 48px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .highlight h4 {
+    font-weight: 600;
+    font-size: 1.2rem;
+    color: #333;
+    margin-bottom: 5px;
+  }
+  
+  .highlight p {
+    color: #666;
+    margin-bottom: 0;
+  }
+  
+  /* Styles pour les badges de destination */
+  .common-destinations {
+    margin-top: 30px;
+  }
+  
+  .common-destinations h4 {
+    font-weight: 600;
+    font-size: 1.2rem;
+    color: #333;
+    margin-bottom: 15px;
+  }
+  
+  .destination-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .destination-tag {
+    display: inline-flex;
+    align-items: center;
+    background-color: #f1f1f1;
+    color: #555;
+    padding: 8px 12px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+  }
+  
+  .destination-tag svg {
+    margin-right: 5px;
+    color: #666;
+  }
+  
+  /* Media queries pour le responsive */
+  @media (max-width: 992px) {
+    .service-area-content {
+      flex-direction: column;
+    }
+    
+    .map-container {
+      order: 2;
+      height: 400px;
+    }
+    
+    .area-info {
+      order: 1;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .service-area-section {
+      padding: 50px 0;
+    }
+    
+    .section-header h2 {
+      font-size: 2rem;
+    }
+    
+    .highlight {
+      gap: 10px;
+    }
+    
+    .highlight svg {
+      padding: 8px;
+      min-width: 40px;
+      min-height: 40px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .destination-tags {
+      gap: 5px;
+    }
+    
+    .destination-tag {
+      padding: 6px 10px;
+      font-size: 0.8rem;
+    }
+  }
