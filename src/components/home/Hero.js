@@ -5,9 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import BookingSimulator from '../booking/BookingSimulator';
 import config from '../../config';
 
-const HeroWithSimulator = () => {
+const Hero = () => {
   const navigate = useNavigate();
-
   return (
     <section className="hero">
       <div className="container">
@@ -45,4 +44,4 @@ const HeroWithSimulator = () => {
   );
 };
 
-export default HeroWithSimulator;
+export default Hero;

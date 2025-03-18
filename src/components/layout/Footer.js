@@ -11,7 +11,7 @@ const Footer = () => {
       <div className="container">
         <div className="footer-content">
           <div className="footer-logo">
-            <img src="/images/logo-white.png" alt={config.company.name} />
+            <img src="/images/logo.png" alt={config.company.name} />
             <p>Votre partenaire de confiance pour tous vos déplacements en Essonne depuis plus de {currentYear - config.company.foundedYear} ans.</p>
           </div>
           
