@@ -78,6 +78,46 @@ export const BookingProvider = ({ children }) => {
     
     return true;
   };
+
+  const calculateEstimationLogic = async () => {
+    // Vérifier si c'est un trajet aéroport
+    const isAirport = isAirportAddress(bookingData.pickupAddress) || 
+                      isAirportAddress(bookingData.destinationAddress);
+    
+    // Générer une distance aléatoire basée sur le type de trajet
+    const baseDist = isAirport ? getRandomNumber(25, 40) : getRandomNumber(5, 25);
+    
+    // Calculer la distance finale
+    const distance = baseDist;
+    
+    // Calculer la durée (vitesse moyenne de 40km/h en trafic urbain)
+    const duration = Math.round(distance / 40 * 60);
+    
+    // Calculer le prix
+    let price = config.pricing.baseFare + (distance * config.pricing.pricePerKm[bookingData.vehicleType]);
+    
+    // Ajouter les suppléments
+    if (isAirport) {
+      price += config.pricing.airportSupplement;
+    }
+    
+    // Vérifier si tarif de nuit
+    const hour = bookingData.pickupTime.getHours();
+    if (hour >= config.pricing.nightHours.start || hour < config.pricing.nightHours.end) {
+      price += config.pricing.nightSupplement;
+    }
+    
+    // Appliquer le tarif minimum
+    if (price < config.pricing.minimumFare[bookingData.vehicleType]) {
+      price = config.pricing.minimumFare[bookingData.vehicleType];
+    }
+    
+    return {
+      distance: parseFloat(distance.toFixed(1)),
+      duration: duration,
+      price: parseFloat(price.toFixed(2))
+    };
+  };
   
   // Calcul de l'estimation
   const calculateEstimation = async () => {
@@ -175,6 +215,12 @@ export const BookingProvider = ({ children }) => {
   const getRandomNumber = (min, max) => {
     return Math.random() * (max - min) + min;
   };
+
+  const simulateEstimation = async () => {
+    // Code similaire à calculateEstimation mais sans changer d'étape
+    const estimationResult = await calculateEstimationLogic();
+    return estimationResult;
+  };
   
   // Fournir le contexte
   return (
@@ -189,7 +235,9 @@ export const BookingProvider = ({ children }) => {
       confirmBooking,
       startNewBooking,
       isSimpleForm,
-      setIsSimpleForm
+      setIsSimpleForm,
+      simulateEstimation,
+      simulateEstimation
     }}>
       {children}
     </BookingContext.Provider>

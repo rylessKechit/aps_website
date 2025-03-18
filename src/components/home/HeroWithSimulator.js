@@ -1,23 +1,23 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Phone } from 'lucide-react';
-import BookingForm from '../booking/BookingForm';
-import { useBooking } from '../../context/BookingContext';
+import { useNavigate } from 'react-router-dom';
+import BookingSimulator from '../booking/BookingSimulator';
 import config from '../../config';
 
-const Hero = () => {
+const HeroWithSimulator = () => {
   const navigate = useNavigate();
-  const { isSimpleForm } = useBooking();
-
-  const handleCompleteBooking = () => {
-    navigate('/booking');
-  };
 
   return (
     <section className="hero">
       <div className="container">
         <div className="hero-content">
-          <div className="hero-text">
+          <motion.div 
+            className="hero-text"
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+          >
             <h1>Votre taxi de confiance en Essonne</h1>
             <p>Service premium de transport pour tous vos déplacements dans le département 91 et la région parisienne.</p>
             <div className="hero-cta">
@@ -29,19 +29,20 @@ const Hero = () => {
                 {config.company.phone}
               </a>
             </div>
-          </div>
+          </motion.div>
           
-          <div className="booking-card">
-            <h2>Réservez votre course</h2>
-            <BookingForm 
-              isSimple={isSimpleForm} 
-              onCompleteBooking={handleCompleteBooking} 
-            />
-          </div>
+          <motion.div 
+            className="booking-card simulator-card"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <BookingSimulator />
+          </motion.div>
         </div>
       </div>
     </section>
   );
 };
 
-export default Hero;
+export default HeroWithSimulator;

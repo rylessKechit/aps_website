@@ -3,6 +3,30 @@
  */
 import config from '../config';
 
+
+/**
+ * Simule la distance entre deux points (fallback si Google Maps API échoue)
+ * @param {string} origin - Adresse de départ
+ * @param {string} destination - Adresse d'arrivée
+ * @returns {Object} - Distance et durée estimées
+ */
+export const simulateDistance = (origin, destination) => {
+  // Vérifier si c'est un trajet aéroport
+  const isAirport = isAirportTransfer(origin, destination);
+  
+  // Simuler une distance en fonction du type de trajet
+  if (isAirport) {
+    return {
+      distance: Math.random() * (40 - 25) + 25, // 25-40 km pour un aéroport
+      duration: Math.random() * (60 - 30) + 30, // 30-60 minutes
+    };
+  } else {
+    return {
+      distance: Math.random() * (25 - 5) + 5, // 5-25 km pour un trajet local
+      duration: Math.random() * (40 - 10) + 10, // 10-40 minutes
+    };
+  }
+};
 /**
  * Vérifie si un trajet inclut une adresse d'aéroport
  * @param {string} pickupAddress - Adresse de départ
@@ -94,6 +118,59 @@ export const calculatePrice = ({
   
   // Arrondir à 2 décimales
   return parseFloat(price.toFixed(2));
+};
+
+/**
+ * Calcule la distance et la durée entre deux adresses à l'aide de Google Maps API
+ * @param {string} origin - Adresse de départ
+ * @param {string} destination - Adresse de destination
+ * @returns {Promise<Object>} - Distance et durée estimées
+ */
+export const calculateDistanceMatrix = async (origin, destination) => {
+  try {
+    if (!window.google || !window.google.maps) {
+      throw new Error('Google Maps API non chargée');
+    }
+    
+    const service = new window.google.maps.DistanceMatrixService();
+    
+    const result = await new Promise((resolve, reject) => {
+      service.getDistanceMatrix(
+        {
+          origins: [origin],
+          destinations: [destination],
+          travelMode: window.google.maps.TravelMode.DRIVING,
+          unitSystem: window.google.maps.UnitSystem.METRIC,
+          avoidHighways: false,
+          avoidTolls: false,
+        },
+        (response, status) => {
+          if (status === 'OK') {
+            resolve(response);
+          } else {
+            reject(new Error(`Erreur Distance Matrix: ${status}`));
+          }
+        }
+      );
+    });
+    
+    const row = result.rows[0];
+    const element = row.elements[0];
+    
+    if (element.status === 'OK') {
+      return {
+        distance: element.distance.value / 1000, // Convertir en km
+        duration: element.duration.value / 60,   // Convertir en minutes
+      };
+    } else {
+      throw new Error(`Erreur d'itinéraire: ${element.status}`);
+    }
+  } catch (error) {
+    console.error('Erreur lors du calcul de distance:', error);
+    
+    // Fallback sur la simulation si l'API échoue
+    return simulateDistance(origin, destination);
+  }
 };
 
 /**

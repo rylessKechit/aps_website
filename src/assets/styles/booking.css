@@ -349,6 +349,153 @@
   .form-control.error {
     border-color: var(--danger-color);
   }
+
+  /* Styles pour le simulateur de réservation */
+
+  .booking-simulator {
+    width: 100%;
+  }
+
+  .simulator-title {
+    text-align: center;
+    margin-bottom: 25px;
+    color: var(--secondary-color);
+  }
+
+  .simulator-form,
+  .simulator-result {
+    width: 100%;
+  }
+
+  /* Styles spécifiques au formulaire du simulateur */
+  .simulator-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 15px;
+  }
+
+  .btn-icon {
+    transition: transform 0.3s ease;
+  }
+
+  .btn:hover .btn-icon {
+    transform: translateX(5px);
+  }
+
+  /* Résultats de simulation */
+  .result-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin-bottom: 20px;
+  }
+
+  .result-header h3 {
+    margin: 0;
+  }
+
+  .back-button {
+    display: flex;
+    align-items: center;
+    background: none;
+    border: none;
+    color: var(--text-light);
+    cursor: pointer;
+    position: absolute;
+    left: 0;
+    font-size: 14px;
+  }
+
+  .back-button span {
+    margin-left: 5px;
+  }
+
+  .result-details {
+    margin-bottom: 20px;
+  }
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .detail-label {
+    display: flex;
+    align-items: center;
+    color: var(--text-light);
+  }
+
+  .detail-label svg {
+    margin-right: 10px;
+  }
+
+  .detail-value {
+    text-align: right;
+    font-weight: 500;
+    max-width: 60%;
+    word-break: break-word;
+  }
+
+  .result-summary {
+    background-color: var(--background-light);
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 20px;
+  }
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+  }
+
+  .summary-row.total {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+
+  .simulator-actions {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .simulator-note {
+    margin-top: 15px;
+    font-size: 0.8rem;
+    color: var(--text-light);
+    text-align: center;
+  }
+
+  /* Styles pour la carte du simulateur sur la page d'accueil */
+  .simulator-card {
+    padding: 20px;
+    max-width: 450px;
+    width: 100%;
+  }
+
+  /* Adaptation mobile */
+  @media (max-width: 768px) {
+    .simulator-card {
+      margin-top: 30px;
+      max-width: 100%;
+      padding: 15px;
+    }
+    
+    .detail-value {
+      max-width: 50%;
+      font-size: 0.9rem;
+    }
+  }
   
   /* Responsive */
   @media (max-width: 768px) {

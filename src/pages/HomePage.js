@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import Hero from '../components/home/Hero';
+import HeroWithSimulator from '../components/home/HeroWithSimulator';
 import Services from '../components/home/Services';
 import Vehicles from '../components/home/Vehicles';
 import ServiceArea from '../components/home/ServiceArea';
@@ -21,7 +21,7 @@ const HomePage = () => {
   
   return (
     <>
-      <Hero />
+      <HeroWithSimulator />
       
       <Services />
       

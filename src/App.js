@@ -18,6 +18,8 @@ import ContactPage from './pages/ContactPage';
 // Styles
 import './assets/styles/App.css';
 import './assets/styles/animations.css';
+import './assets/styles/vehiclesCard.css';
+import './assets/styles/services.css';
 
 function App() {
   return (

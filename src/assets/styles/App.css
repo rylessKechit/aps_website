@@ -213,7 +213,7 @@
   
   /* Hero Section */
   .hero {
-    background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/images/hero-bg.jpg') no-repeat center center/cover;
+    background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('../../../public/images/hero-bg.jpg') no-repeat center center/cover;
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -573,6 +573,31 @@
   .mobile-booking-btn:hover {
     background-color: var(--primary-dark);
     transform: scale(1.05);
+  }
+
+  /* Animations subtiles */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .vehicle-card {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  /* Responsive design pour mobile */
+  @media (max-width: 768px) {
+    .vehicle-image {
+      height: 160px;
+    }
+    
+    .vehicle-content {
+      padding: 16px;
+    }
+    
+    .vehicle-title {
+      font-size: 1.2rem;
+    }
   }
   
   /* Responsive Design */

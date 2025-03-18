@@ -205,7 +205,7 @@ const config = {
         contact: "/contact",
         geocoding: "/geocode"
       },
-      googleMapsApiKey: "AIzaSyCheoP_8ZmUEPBvmlpW3QkRgJKvN5fd3Qw" // À remplacer par votre clé API
+      googleMapsApiKey: "AIzaSyA746fHg3bUH2Cvl49PbYZ1sp0e5d2F_tU" // À remplacer par votre clé API
     },
     
     // Réglages de réservation

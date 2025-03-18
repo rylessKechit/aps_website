@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Clock, Calendar, Users, Briefcase } from 'lucide-react';
+import { Clock, Calendar, Users, Briefcase } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useBooking } from '../../context/BookingContext';
 import VehicleSelector from './VehicleSelector';
+import GooglePlacesAutocomplete from './GooglePlacesAutocomplete';
 import config from '../../config';
 
 const BookingForm = ({ isSimple = true, onCompleteBooking }) => {
@@ -141,35 +142,27 @@ const BookingForm = ({ isSimple = true, onCompleteBooking }) => {
       </div>
       
       <div className="form-group">
-        <label htmlFor="pickupAddress">Adresse de départ</label>
-        <div className="input-icon-wrapper">
-          <MapPin size={18} className="input-icon" />
-          <input
-            type="text"
-            id="pickupAddress"
-            name="pickupAddress"
-            value={formData.pickupAddress}
-            onChange={handleChange}
-            placeholder="N° rue, communes..."
-            className="form-control"
-          />
-        </div>
+        <GooglePlacesAutocomplete
+          id="pickupAddress"
+          name="pickupAddress"
+          value={formData.pickupAddress}
+          onChange={handleChange}
+          placeholder="N° rue, communes..."
+          label="Adresse de départ"
+          required
+        />
       </div>
       
       <div className="form-group">
-        <label htmlFor="destinationAddress">Destination</label>
-        <div className="input-icon-wrapper">
-          <MapPin size={18} className="input-icon" />
-          <input
-            type="text"
-            id="destinationAddress"
-            name="destinationAddress"
-            value={formData.destinationAddress}
-            onChange={handleChange}
-            placeholder="N° rue, communes..."
-            className="form-control"
-          />
-        </div>
+        <GooglePlacesAutocomplete
+          id="destinationAddress"
+          name="destinationAddress"
+          value={formData.destinationAddress}
+          onChange={handleChange}
+          placeholder="N° rue, communes..."
+          label="Destination"
+          required
+        />
       </div>
       
       {!isSimple && (

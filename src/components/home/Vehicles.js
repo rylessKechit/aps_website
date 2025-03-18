@@ -1,140 +1,104 @@
-import React, { useRef } from 'react';
-import { motion } from 'framer-motion';
-import { User, Briefcase, ChevronLeft, ChevronRight } from 'lucide-react';
-import Slider from 'react-slick';
-import 'slick-carousel/slick/slick.css';
-import 'slick-carousel/slick/slick-theme.css';
+import React from 'react';
+import { 
+  Users, 
+  Briefcase, 
+  Wifi, 
+  Cloud, 
+  Zap, 
+  Usb, 
+  Droplet, 
+  Monitor, 
+  Leaf,
+  Users as UsersGroup
+} from 'lucide-react';
 import config from '../../config';
 
-const Vehicles = () => {
-  // Référence au slider pour contrôler la navigation
-  const sliderRef = useRef(null);
+const ModernVehicles = () => {
+  // Référence aux types de véhicules depuis la configuration
+  const vehicleTypes = config.vehicles.types;
   
-  // Configuration du slider
-  const sliderSettings = {
-    dots: true,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 3,
-    slidesToScroll: 1,
-    autoplay: true,
-    autoplaySpeed: 5000,
-    pauseOnHover: true,
-    responsive: [
-      {
-        breakpoint: 1024,
-        settings: {
-          slidesToShow: 2,
-          slidesToScroll: 1,
-        }
-      },
-      {
-        breakpoint: 600,
-        settings: {
-          slidesToShow: 1,
-          slidesToScroll: 1,
-        }
-      }
-    ]
+  // Helper pour obtenir l'icône appropriée pour les caractéristiques
+  const getFeatureIcon = (feature) => {
+    if (feature.includes('WiFi')) return <Wifi size={16} />;
+    if (feature.includes('Climat')) return <Cloud size={16} />;
+    if (feature.includes('USB')) return <Usb size={16} />;
+    if (feature.includes('eau')) return <Droplet size={16} />;
+    if (feature.includes('Écran')) return <Monitor size={16} />;
+    if (feature.includes('Zéro')) return <Leaf size={16} />;
+    // Icône par défaut
+    return <Cloud size={16} />;
   };
-  
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        duration: 0.5
-      }
+
+  // Fonction pour déterminer les badges spéciaux
+  const getHighlightBadge = (vehicleId) => {
+    if (vehicleId === 'electrique') {
+      return (
+        <div className="vehicle-highlight eco-highlight">
+          <Leaf size={16} /> Véhicule écologique
+        </div>
+      );
     }
-  };
-  
-  // Navigation du slider
-  const goToPrev = () => {
-    if (sliderRef.current) {
-      sliderRef.current.slickPrev();
+    
+    if (vehicleId === 'van') {
+      return (
+        <div className="vehicle-highlight space-highlight">
+          <UsersGroup size={16} /> Idéal pour groupes
+        </div>
+      );
     }
-  };
-  
-  const goToNext = () => {
-    if (sliderRef.current) {
-      sliderRef.current.slickNext();
-    }
+    
+    return null;
   };
   
   return (
-    <section id="vehicules" className="vehicles-section">
-      <div className="container">
-        <div className="section-header">
-          <h2>Notre flotte</h2>
-          <p>Des véhicules récents et entretenus pour votre confort et sécurité</p>
-        </div>
-        
-        <motion.div 
-          className="vehicles-slider-container"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-        >
-          <div className="slider-navigation">
-            <button 
-              className="slider-nav-btn prev-btn" 
-              onClick={goToPrev}
-              aria-label="Véhicule précédent"
-            >
-              <ChevronLeft size={24} />
-            </button>
+    <section className="notre-flotte-section">
+      <div className="section-title-container">
+        <h2 className="section-title">Notre flotte</h2>
+        <p className="section-subtitle">Des véhicules récents et entretenus pour votre confort et sécurité</p>
+      </div>
+      
+      <div className="vehicles-container">
+        {vehicleTypes.map((vehicle) => (
+          <div className="vehicle-card" key={vehicle.id}>
+            <div className="vehicle-badge">{vehicle.name}</div>
             
-            <button 
-              className="slider-nav-btn next-btn" 
-              onClick={goToNext}
-              aria-label="Véhicule suivant"
-            >
-              <ChevronRight size={24} />
-            </button>
-          </div>
-          
-          <Slider ref={sliderRef} {...sliderSettings}>
-            {config.vehicles.types.map((vehicle) => (
-              <div key={vehicle.id} className="vehicle-slide">
-                <div className="vehicle-card">
-                  <div className="vehicle-image">
-                    <img 
-                      src={`/images/vehicles/${vehicle.id}.jpg`} 
-                      alt={vehicle.name} 
-                      onError={(e) => {
-                        e.target.src = 'https://via.placeholder.com/400x250?text=Véhicule';
-                      }} 
-                    />
-                  </div>
-                  <div className="vehicle-info">
-                    <h3>{vehicle.name}</h3>
-                    <p>{vehicle.description}</p>
-                    <div className="vehicle-features">
-                      <span>
-                        <User size={16} />
-                        {vehicle.capacity.passengers} passagers
-                      </span>
-                      <span>
-                        <Briefcase size={16} />
-                        {vehicle.capacity.luggage} bagages
-                      </span>
-                    </div>
-                    <ul className="vehicle-amenities">
-                      {vehicle.features.map((feature, index) => (
-                        <li key={index}>{feature}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
+            <div className="vehicle-header">
+              <h3 className="vehicle-title">{vehicle.name}</h3>
+              <p className="vehicle-model">{vehicle.description}</p>
+            </div>
+            
+            <div className="vehicle-photo">
+              <img 
+                src={`/images/vehicles/${vehicle.id}.png`} 
+                alt={vehicle.name}
+              />
+            </div>
+            
+            <div className="vehicle-main-info">
+              <div className="info-item">
+                <Users size={16} /> {vehicle.capacity.passengers} passagers
               </div>
-            ))}
-          </Slider>
-        </motion.div>
+              <div className="info-item">
+                <Briefcase size={16} /> {vehicle.capacity.luggage} bagages
+              </div>
+            </div>
+            
+            <div className="vehicle-features">
+              <ul className="feature-list">
+                {vehicle.features.map((feature, index) => (
+                  <li className="feature-item" key={index}>
+                    {getFeatureIcon(feature)} {feature}
+                  </li>
+                ))}
+              </ul>
+              
+              {getHighlightBadge(vehicle.id)}
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );
 };
 
-export default Vehicles;
+export default ModernVehicles;
