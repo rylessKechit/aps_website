@@ -1,20 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { MapPin } from 'lucide-react';
+import { loadGoogleMapsScript, waitForGooglePlaces } from '../../utils/mapsHelper';
 import config from '../../config';
 
 /**
  * Composant d'autocomplete d'adresse utilisant Google Places API
  * ou une simulation en mode développement
- * 
- * @param {Object} props
- * @param {string} props.id - ID du champ
- * @param {string} props.name - Nom du champ pour les formulaires
- * @param {string} props.value - Valeur actuelle du champ
- * @param {Function} props.onChange - Fonction appelée lors du changement de valeur
- * @param {string} props.placeholder - Texte d'indication
- * @param {boolean} props.required - Si le champ est requis
- * @param {string} props.label - Étiquette du champ
- * @param {string} props.error - Message d'erreur éventuel
  */
 const GooglePlacesAutocomplete = ({
   id,
@@ -36,40 +27,53 @@ const GooglePlacesAutocomplete = ({
 
   // Chargement du script Google Maps
   useEffect(() => {
-    if (window.google && window.google.maps) {
-      setIsScriptLoaded(true);
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${config.api.googleMapsApiKey}&libraries=places`;
-    script.async = true;
-    script.defer = true;
-
-    script.onload = () => {
-      setIsScriptLoaded(true);
-    };
-
-    script.onerror = () => {
-      setScriptError('Impossible de charger Google Maps API');
-      // Utiliser des suggestions simulées si l'API échoue
-      console.warn('Échec du chargement de l\'API, utilisation de suggestions simulées');
-    };
-
-    document.head.appendChild(script);
-
-    return () => {
-      if (document.head.contains(script)) {
-        document.head.removeChild(script);
+    let isMounted = true;
+    
+    const initGoogleMaps = async () => {
+      try {
+        console.log('Tentative de chargement de Google Maps API');
+        await loadGoogleMapsScript();
+        
+        // S'assurer que Places est bien chargé
+        await waitForGooglePlaces();
+        
+        if (isMounted) {
+          console.log('Google Maps et Places API chargés avec succès');
+          setIsScriptLoaded(true);
+          setScriptError(null);
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement de l\'API:', error);
+        if (isMounted) {
+          setScriptError('Impossible de charger l\'API. Mode simulation activé.');
+          // Activer le mode simulation
+          setSuggestions(simulateSuggestions(value || ''));
+        }
       }
+    };
+
+    initGoogleMaps();
+    
+    // Nettoyage
+    return () => {
+      isMounted = false;
     };
   }, []);
 
   // Initialisation de l'autocomplete
   useEffect(() => {
     if (!isScriptLoaded || !inputRef.current) return;
+    
+    // Vérifier que Places API est disponible
+    if (!window.google || !window.google.maps || !window.google.maps.places) {
+      console.error('Places API non disponible');
+      setScriptError('La fonctionnalité Google Places n\'est pas disponible. Mode simulation activé.');
+      return;
+    }
 
     try {
+      console.log('Initialisation de l\'autocomplete');
+      
       // Configuration de l'autocomplete
       const options = {
         componentRestrictions: { country: 'fr' },
@@ -83,22 +87,58 @@ const GooglePlacesAutocomplete = ({
         inputRef.current,
         options
       );
+      
+      console.log('Autocomplete créé avec succès');
 
       // Écouter les changements de lieu sélectionné
       autocompleteRef.current.addListener('place_changed', () => {
         const place = autocompleteRef.current.getPlace();
         
-        if (place && place.formatted_address) {
-          // Créer un événement pour simuler un changement de champ
-          const event = { 
-            target: { 
-              name, 
-              value: place.formatted_address 
-            } 
-          };
-          
-          onChange(event);
-          setShowSuggestions(false);
+        if (place) {
+          // Vérifier si nous avons une adresse formatée
+          if (place.formatted_address) {
+            console.log('Adresse formatée sélectionnée:', place.formatted_address);
+            
+            // Créer un événement pour simuler un changement de champ
+            const event = { 
+              target: { 
+                name, 
+                value: place.formatted_address 
+              } 
+            };
+            
+            // Mettre à jour la valeur avec l'adresse formatée complète
+            onChange(event);
+            
+            // S'assurer que le champ input est aussi mis à jour
+            if (inputRef.current) {
+              inputRef.current.value = place.formatted_address;
+            }
+            
+            setShowSuggestions(false);
+          } else if (place.name) {
+            // Fallback au nom du lieu si pas d'adresse formatée
+            console.log('Nom du lieu sélectionné:', place.name);
+            
+            const event = { 
+              target: { 
+                name, 
+                value: place.name 
+              } 
+            };
+            
+            onChange(event);
+            
+            if (inputRef.current) {
+              inputRef.current.value = place.name;
+            }
+            
+            setShowSuggestions(false);
+          } else {
+            console.warn('Lieu sélectionné sans adresse formatée ou nom');
+          }
+        } else {
+          console.warn('Aucun lieu sélectionné');
         }
       });
 
@@ -126,9 +166,14 @@ const GooglePlacesAutocomplete = ({
 
       return () => {
         observer.disconnect();
+        
+        // Nettoyage de l'autocomplete
+        if (autocompleteRef.current && window.google && window.google.maps) {
+          window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
+        }
       };
     } catch (error) {
-      console.error('Erreur lors de l\'initialisation de l\'autocomplete :', error);
+      console.error('Erreur lors de l\'initialisation de l\'autocomplete:', error);
       setScriptError('Erreur avec l\'autocomplétion. Saisissez votre adresse complète.');
     }
   }, [isScriptLoaded, name, onChange]);
@@ -173,6 +218,9 @@ const GooglePlacesAutocomplete = ({
 
   // Gérer la sélection d'une suggestion
   const handleSuggestionClick = (suggestion) => {
+    console.log('Suggestion sélectionnée:', suggestion);
+    
+    // Créer un événement simulé
     const event = { 
       target: { 
         name, 
@@ -180,7 +228,14 @@ const GooglePlacesAutocomplete = ({
       } 
     };
     
+    // Mettre à jour la valeur
     onChange(event);
+    
+    // Mettre à jour la valeur dans l'input
+    if (inputRef.current) {
+      inputRef.current.value = suggestion;
+    }
+    
     setShowSuggestions(false);
   };
 
@@ -226,6 +281,7 @@ const GooglePlacesAutocomplete = ({
           placeholder={placeholder}
           className={inputClasses}
           required={required}
+          autoComplete="off" // Désactiver l'autocomplétion du navigateur
           {...rest}
         />
         <MapPin className="address-input-icon" size={18} />

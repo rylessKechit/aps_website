@@ -2,6 +2,7 @@
  * Fonctions utilitaires pour le calcul des prix et estimations
  */
 import config from '../config';
+import { loadGoogleMapsScript } from './mapsHelper';
 
 /**
  * Simule la distance entre deux points (fallback si Google Maps API échoue)
@@ -165,12 +166,26 @@ export const calculatePrice = ({
  */
 export const calculateDistanceMatrix = async (origin, destination) => {
   try {
+    // S'assurer que l'API Maps est chargée
     if (!window.google || !window.google.maps) {
-      throw new Error('Google Maps API non chargée');
+      // Tenter de charger l'API
+      try {
+        await loadGoogleMapsScript();
+      } catch (error) {
+        console.error('Échec du chargement de Google Maps API:', error);
+        throw new Error('Google Maps API non disponible');
+      }
     }
     
+    // S'assurer que l'API est maintenant disponible
+    if (!window.google || !window.google.maps) {
+      throw new Error('Google Maps API toujours non disponible après chargement');
+    }
+    
+    // Créer le service Distance Matrix
     const service = new window.google.maps.DistanceMatrixService();
     
+    // Effectuer la requête
     const result = await new Promise((resolve, reject) => {
       service.getDistanceMatrix(
         {
@@ -191,19 +206,30 @@ export const calculateDistanceMatrix = async (origin, destination) => {
       );
     });
     
+    // Traiter le résultat
     const row = result.rows[0];
     const element = row.elements[0];
     
     if (element.status === 'OK') {
+      // Retourner la distance et la durée
+      console.log('Calcul de distance réussi:', {
+        distance: element.distance.value / 1000,
+        duration: element.duration.value / 60
+      });
+      
       return {
         distance: element.distance.value / 1000, // Convertir en km
         duration: element.duration.value / 60,   // Convertir en minutes
       };
     } else {
+      console.error('Erreur d\'itinéraire:', element.status);
       throw new Error(`Erreur d'itinéraire: ${element.status}`);
     }
   } catch (error) {
     console.error('Erreur lors du calcul de distance:', error);
+    
+    // Log détaillé avant de revenir à la simulation
+    console.warn('Utilisation de la simulation comme solution de repli');
     
     // Fallback sur la simulation si l'API échoue
     return simulateDistance(origin, destination);

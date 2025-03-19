@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, MapPin, Calendar, Clock, ArrowLeft, Users, Briefcase, Car } from 'lucide-react';
+import { ArrowRight, MapPin, Calendar, Clock, ArrowLeft, Users, Briefcase, Car, Zap, Truck } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { calculateDistanceMatrix, loadGoogleMapsScript } from '../../utils/mapsHelper';
 import { isAirportTransfer, isNightFare, calculatePrice, formatPrice, formatDistance, formatDuration } from '../../utils/pricing';
 import GooglePlacesAutocomplete from './GooglePlacesAutocomplete';
 import config from '../../config';
@@ -30,11 +31,31 @@ const BookingSimulator = () => {
     duration: 0,
     price: 0,
     isAirport: false,
-    isNightFare: false
+    isNightFare: false,
+    distanceText: '',
+    durationText: ''
   });
   
   // État pour le chargement
   const [isLoading, setIsLoading] = useState(false);
+  
+  // État pour le chargement de l'API
+  const [isApiLoaded, setIsApiLoaded] = useState(false);
+  
+  // Charger l'API Google Maps au montage du composant
+  useEffect(() => {
+    const initApi = async () => {
+      try {
+        await loadGoogleMapsScript();
+        setIsApiLoaded(true);
+        console.log('Google Maps API chargée avec succès');
+      } catch (error) {
+        console.error('Erreur lors du chargement de Google Maps API:', error);
+      }
+    };
+    
+    initApi();
+  }, []);
   
   // Gérer le changement des champs du formulaire
   const handleChange = (e) => {
@@ -90,26 +111,7 @@ const BookingSimulator = () => {
     });
   };
   
-  // Simuler la distance entre deux points (en production, utilisez Google Distance Matrix API)
-  const simulateDistance = (origin, destination) => {
-    // Vérifier si c'est un trajet aéroport
-    const isAirport = isAirportTransfer(origin, destination);
-    
-    // Simuler une distance en fonction du type de trajet
-    if (isAirport) {
-      return {
-        distance: Math.random() * (40 - 25) + 25, // 25-40 km pour un aéroport
-        duration: Math.random() * (60 - 30) + 30, // 30-60 minutes
-      };
-    } else {
-      return {
-        distance: Math.random() * (25 - 5) + 5, // 5-25 km pour un trajet local
-        duration: Math.random() * (40 - 10) + 10, // 10-40 minutes
-      };
-    }
-  };
-  
-  // Simuler la réservation
+  // Simuler la réservation en utilisant l'API Google Maps
   const simulateBooking = async (e) => {
     e.preventDefault();
     
@@ -122,11 +124,42 @@ const BookingSimulator = () => {
     setIsLoading(true);
     
     try {
-      // Simuler le calcul de distance et durée
-      const { distance, duration } = simulateDistance(
-        formData.pickupAddress,
-        formData.destinationAddress
+      console.log('Début de la simulation avec adresses:', {
+        origin: formData.pickupAddress,
+        destination: formData.destinationAddress
+      });
+      
+      // Calculer pour l'heure de départ spécifiée
+      const departureDateTime = new Date(formData.pickupDate);
+      departureDateTime.setHours(
+        formData.pickupTime.getHours(),
+        formData.pickupTime.getMinutes(),
+        0, 0
       );
+      
+      // Utiliser l'API Distance Matrix pour le calcul réel de distance avec trafic
+      let distanceResult;
+      try {
+        console.log('Tentative de calcul avec Google Distance Matrix pour', departureDateTime.toLocaleString());
+        distanceResult = await calculateDistanceMatrix(
+          formData.pickupAddress,
+          formData.destinationAddress,
+          departureDateTime
+        );
+        console.log('Résultat Distance Matrix avec trafic:', distanceResult);
+      } catch (error) {
+        console.error('Erreur lors du calcul de distance avec Google Maps API:', error);
+        alert('Erreur lors du calcul de distance. Utilisation d\'une estimation approximative.');
+        // On utilise une estimation approximative en cas d'erreur
+        distanceResult = {
+          distance: Math.random() * (25 - 5) + 5, // 5-25 km 
+          duration: Math.random() * (40 - 10) + 10, // 10-40 minutes
+          distanceText: "15.0 km", // Valeurs par défaut
+          durationText: "20 min"
+        };
+      }
+      
+      const { distance, duration, distanceText, durationText } = distanceResult;
       
       // Déterminer si c'est un trajet aéroport
       const isAirport = isAirportTransfer(
@@ -146,20 +179,30 @@ const BookingSimulator = () => {
         isNightFare: isNight
       });
       
+      console.log('Simulation terminée:', {
+        distance,
+        duration,
+        price,
+        isAirport,
+        isNight,
+        distanceText,
+        durationText
+      });
+      
       // Mettre à jour les résultats
       setSimulationResult({
         distance: parseFloat(distance.toFixed(1)),
         duration: Math.round(duration),
         price,
         isAirport,
-        isNightFare: isNight
+        isNightFare: isNight,
+        distanceText,
+        durationText
       });
       
       // Afficher les résultats
       setShowResult(true);
       
-      // Simuler un délai réseau
-      await new Promise(resolve => setTimeout(resolve, 800));
     } catch (error) {
       console.error('Erreur lors de la simulation:', error);
       alert('Une erreur s\'est produite lors de la simulation. Veuillez réessayer.');
@@ -332,32 +375,9 @@ const BookingSimulator = () => {
                   onClick={() => handleVehicleSelect(vehicle.id)}
                 >
                   <div className="vehicle-icon">
-                    {vehicle.id === 'berline' && (
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path>
-                        <path d="M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path>
-                        <path d="M5 17h-2v-6l2 -5h9l4 5h1a2 2 0 0 1 2 2v4h-2m-4 0h-6"></path>
-                        <path d="M5 11l12 0"></path>
-                      </svg>
-                    )}
-                    {vehicle.id === 'electrique' && (
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M11.5 20h-6.5v-6a2 2 0 0 1 2 -2h8"></path>
-                        <path d="M16 14a2 2 0 1 1 4 0v6h-4v-6z"></path>
-                        <path d="M9 4l1 2h6l1 -2"></path>
-                        <path d="M12 14h-6v-4"></path>
-                        <path d="M15 4m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
-                        <path d="M19 4m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
-                      </svg>
-                    )}
-                    {vehicle.id === 'van' && (
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path>
-                        <path d="M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path>
-                        <path d="M3 17h1v-6h13v6h1"></path>
-                        <path d="M3 9l0 -4l8 0l9 4l0 8"></path>
-                      </svg>
-                    )}
+                    {vehicle.id === 'berline' && <Car size={24} />}
+                    {vehicle.id === 'electrique' && <Zap size={24} />}
+                    {vehicle.id === 'van' && <Truck size={24} />}
                   </div>
                   <span className="vehicle-name">{vehicle.name}</span>
                   <span className="vehicle-capacity">{vehicle.capacity.passengers} passagers max</span>
@@ -453,11 +473,12 @@ const BookingSimulator = () => {
           <div className="result-summary">
             <div className="summary-row">
               <span>Distance estimée</span>
-              <span>{formatDistance(simulationResult.distance)}</span>
+              <span>{simulationResult.distanceText || formatDistance(simulationResult.distance)}</span>
             </div>
             <div className="summary-row">
               <span>Durée estimée</span>
-              <span>{formatDuration(simulationResult.duration)}</span>
+              <span className="duration-display">{simulationResult.durationText || formatDuration(simulationResult.duration)}</span>
+              <span className="traffic-note">(avec trafic actuel)</span>
             </div>
             {simulationResult.isAirport && (
               <div className="summary-row">
@@ -494,7 +515,7 @@ const BookingSimulator = () => {
           </div>
           
           <p className="simulator-note">
-            Cette estimation est basée sur une circulation normale. Le prix final peut varier en fonction des conditions de circulation.
+            Cette estimation prend en compte les conditions de circulation actuelles. Le temps de trajet et le prix peuvent varier selon le trafic.
           </p>
         </div>
       )}

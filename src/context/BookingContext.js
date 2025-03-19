@@ -95,15 +95,20 @@ export const BookingProvider = ({ children }) => {
     }
     
     try {
-      // Calculer la distance et la durée (en production, utiliser l'API Distance Matrix)
+      console.log('Début du calcul d\'estimation...');
+      
+      // Calculer la distance et la durée avec Google Maps API
       let distanceResult;
       try {
+        console.log('Tentative de calcul avec Google Distance Matrix');
         distanceResult = await calculateDistanceMatrix(
           bookingData.pickupAddress,
           bookingData.destinationAddress
         );
+        console.log('Résultat Distance Matrix:', distanceResult);
       } catch (error) {
-        console.warn('Erreur avec Google Distance Matrix, utilisation du calcul simulé', error);
+        console.error('Erreur avec Google Distance Matrix:', error);
+        console.warn('Utilisation du calcul simulé');
         distanceResult = simulateDistance(
           bookingData.pickupAddress,
           bookingData.destinationAddress
@@ -139,6 +144,16 @@ export const BookingProvider = ({ children }) => {
       
       // Générer un numéro de réservation unique
       const bookingRef = generateBookingReference();
+      
+      console.log('Estimation calculée:', {
+        distance: parseFloat(distance.toFixed(1)),
+        duration: Math.round(duration),
+        price,
+        isAirport,
+        isStation,
+        isNightFare: isNight,
+        bookingRef
+      });
       
       // Mettre à jour les résultats d'estimation
       setEstimationResults({
