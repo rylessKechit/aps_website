@@ -414,7 +414,9 @@ const BookingSimulator = () => {
                 <MapPin size={18} />
                 <span>Départ</span>
               </div>
-              <div className="detail-value">{formData.pickupAddress}</div>
+              <div className="detail-value" title={formData.pickupAddress}>
+                {formData.pickupAddress}
+              </div>
             </div>
             
             <div className="detail-row">
@@ -422,7 +424,9 @@ const BookingSimulator = () => {
                 <MapPin size={18} />
                 <span>Destination</span>
               </div>
-              <div className="detail-value">{formData.destinationAddress}</div>
+              <div className="detail-value" title={formData.destinationAddress}>
+                {formData.destinationAddress}
+              </div>
             </div>
             
             <div className="detail-row">
@@ -477,8 +481,7 @@ const BookingSimulator = () => {
             </div>
             <div className="summary-row">
               <span>Durée estimée</span>
-              <span className="duration-display">{simulationResult.durationText || formatDuration(simulationResult.duration)}</span>
-              <span className="traffic-note">(avec trafic actuel)</span>
+              <span>{simulationResult.durationText || formatDuration(simulationResult.duration)}</span>
             </div>
             {simulationResult.isAirport && (
               <div className="summary-row">
